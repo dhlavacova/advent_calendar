@@ -1,5 +1,5 @@
 import type { CSSProperties } from 'react'
-
+import type { PhotoSettings } from './types/calendar.ts'
 // Písma se načítají z Google Fonts v index.html, id jsou i v `server/photos.ts`.
 export const FONTS = [
   { id: 'dancing', name: 'Dancing Script', family: "'Dancing Script', cursive" },
@@ -15,18 +15,6 @@ export type FontId = (typeof FONTS)[number]['id']
 // Text: velikost v % menšího rozměru okénka, aby se přizpůsobil jeho velikosti,
 // textX/textY je střed textu v % okénka, textRotate otočení ve stupních.
 // Stejný typ je v `server/photos.ts`.
-export type PhotoSettings = {
-  x: number
-  y: number
-  zoom: number
-  text: string
-  textColor: string
-  textSize: number
-  textFont: FontId
-  textX: number
-  textY: number
-  textRotate: number
-}
 
 export const DEFAULT_SETTINGS: PhotoSettings = {
   x: 50,

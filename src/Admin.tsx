@@ -6,8 +6,8 @@ import {
   textPlacement,
   textStyle,
   withDefaults,
-  type PhotoSettings,
 } from './photoStyle.ts'
+import type { PhotoSettings } from './types/calendar.ts'
 import './Admin.css'
 
 type DayInfo = { day: number; hasPhoto: boolean; settings: Partial<PhotoSettings> | null }
