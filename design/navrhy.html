@@ -1,0 +1,1016 @@
+<!doctype html>
+<html lang="cs">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Návrhy okének</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Alegreya:wght@700;800&family=Fraunces:opsz,wght@9..144,600&family=Instrument+Sans:wght@400;600&family=Josefin+Sans:wght@300;400&family=Rubik+Mono+One&family=Sniglet:wght@800&display=swap"
+    />
+    <style>
+      /* ---------- Stránka ---------- */
+
+      body {
+        margin: 0;
+        font-family: 'Instrument Sans', system-ui, sans-serif;
+        background: #eceef2;
+        color: #1e2430;
+      }
+
+      .intro {
+        max-width: 68ch;
+        margin: 0 auto;
+        padding: 56px 24px 40px;
+      }
+
+      .intro h1 {
+        margin: 0 0 12px;
+        font-size: clamp(1.8rem, 4vw, 2.6rem);
+        font-weight: 600;
+        line-height: 1.1;
+      }
+
+      .intro p {
+        margin: 0;
+        font-size: 1.05rem;
+        line-height: 1.55;
+      }
+
+      .proposal {
+        padding: 48px clamp(16px, 4vw, 64px) 64px;
+      }
+
+      .proposal__text {
+        max-width: 60ch;
+        margin: 0 auto 28px;
+        text-align: center;
+      }
+
+      .proposal h2 {
+        margin: 0 0 8px;
+        font-size: clamp(1.5rem, 3vw, 2.2rem);
+        line-height: 1.15;
+      }
+
+      .proposal p {
+        margin: 0;
+        line-height: 1.55;
+      }
+
+      .stage {
+        max-width: 1400px;
+        margin: 0 auto;
+      }
+
+      /* ---------- Společná mřížka a okénko ---------- */
+
+      .board {
+        display: grid;
+        grid-template-columns: repeat(9, 1fr);
+        grid-template-rows: repeat(3, 1fr);
+        grid-auto-flow: dense;
+        aspect-ratio: 3 / 1.15;
+        gap: 12px;
+        perspective: 1400px;
+      }
+
+      .w {
+        position: relative;
+        container-type: size;
+        padding: 0;
+        border: 0;
+        background: none;
+        color: inherit;
+        font: inherit;
+        cursor: pointer;
+        transform-style: preserve-3d;
+      }
+
+      .w:focus-visible {
+        outline: 3px solid #fff;
+        outline-offset: 4px;
+      }
+
+      .w--big {
+        grid-column: span 2;
+        grid-row: span 2;
+      }
+
+      .w.is-locked {
+        cursor: not-allowed;
+      }
+
+      .w__inside {
+        position: absolute;
+        inset: 0;
+        overflow: hidden;
+        border-radius: inherit;
+      }
+
+      .w__inside img {
+        display: block;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      .w__door {
+        position: absolute;
+        inset: 0;
+        display: grid;
+        place-items: center;
+        border-radius: inherit;
+        transform-origin: left center;
+        transition: transform 0.9s cubic-bezier(0.3, 0.7, 0.3, 1);
+        backface-visibility: hidden;
+      }
+
+      .w__num {
+        position: relative;
+        line-height: 1;
+      }
+
+      .w__deco,
+      .w__extra {
+        position: absolute;
+        pointer-events: none;
+      }
+
+      .w.is-shake {
+        animation: shake 0.4s;
+      }
+
+      @keyframes shake {
+        20%,
+        60% {
+          translate: -4px 0;
+        }
+        40%,
+        80% {
+          translate: 4px 0;
+        }
+      }
+
+      @media (max-width: 700px) {
+        .board {
+          grid-template-columns: repeat(3, 1fr);
+          grid-template-rows: none;
+          aspect-ratio: auto;
+        }
+
+        .w {
+          aspect-ratio: 1;
+        }
+      }
+
+      /* ---------- 1. Perníček ---------- */
+
+      .p-pernik {
+        background: #3b2116;
+        color: #f3dfca;
+      }
+
+      .p-pernik h2 {
+        font-family: 'Sniglet', system-ui;
+        font-weight: 800;
+        color: #fff6ea;
+      }
+
+      .p-pernik .board {
+        gap: clamp(8px, 1.3vw, 18px);
+      }
+
+      .p-pernik .w {
+        border-radius: 18px;
+      }
+
+      .p-pernik .w__inside {
+        background: #2a170f;
+        border: 3px solid #fff6ea;
+      }
+
+      .p-pernik .w__door {
+        background: radial-gradient(circle at 30% 25%, #d38d52, #a45a2a 72%);
+        box-shadow:
+          inset 0 -6px 0 rgb(70 30 10 / 0.35),
+          0 5px 0 #24130b;
+        transition: opacity 0.3s;
+      }
+
+      /* Poleva nastříkaná po obvodu */
+      .p-pernik .w__door::before {
+        content: '';
+        position: absolute;
+        inset: 9%;
+        border: 3px dashed #fff6ea;
+        border-radius: 12px;
+      }
+
+      .p-pernik .w__num {
+        font-family: 'Sniglet', system-ui;
+        font-weight: 800;
+        font-size: 36cqmin;
+        color: #fff6ea;
+        text-shadow: 0 3px 0 #7a3e1a;
+      }
+
+      .p-pernik .is-locked .w__door {
+        background: radial-gradient(circle at 30% 25%, #a87047, #7b4627 72%);
+      }
+
+      .p-pernik .is-locked .w__door::before,
+      .p-pernik .is-locked .w__num {
+        opacity: 0.6;
+      }
+
+      .p-pernik .is-ready .w__door {
+        box-shadow:
+          inset 0 -6px 0 rgb(70 30 10 / 0.35),
+          0 0 0 3px #ffd36b,
+          0 0 28px rgb(255 211 107 / 0.55);
+      }
+
+      .p-pernik .is-open .w__door {
+        opacity: 0;
+      }
+
+      /* Okusování: kousance jsou díry v masce, jejich poloměr (--b1 … --b6)
+         se postupně zvětší z 0. Běží jen při otevření kliknutím (.is-opening). */
+      @property --b1 {
+        syntax: '<length>';
+        inherits: false;
+        initial-value: 0px;
+      }
+
+      @property --b2 {
+        syntax: '<length>';
+        inherits: false;
+        initial-value: 0px;
+      }
+
+      @property --b3 {
+        syntax: '<length>';
+        inherits: false;
+        initial-value: 0px;
+      }
+
+      @property --b4 {
+        syntax: '<length>';
+        inherits: false;
+        initial-value: 0px;
+      }
+
+      @property --b5 {
+        syntax: '<length>';
+        inherits: false;
+        initial-value: 0px;
+      }
+
+      @property --b6 {
+        syntax: '<length>';
+        inherits: false;
+        initial-value: 0px;
+      }
+
+      .p-pernik .is-open.is-opening .w__door {
+        opacity: 1;
+        mask:
+          radial-gradient(circle at 100% 0%, #0000 var(--b1), #000 calc(var(--b1) + 0.5px)),
+          radial-gradient(circle at 80% -4%, #0000 calc(var(--b1) * 0.75), #000 calc(calc(var(--b1) * 0.75) + 0.5px)),
+          radial-gradient(circle at 104% 20%, #0000 calc(var(--b1) * 0.75), #000 calc(calc(var(--b1) * 0.75) + 0.5px)),
+          radial-gradient(circle at -3% 34%, #0000 var(--b2), #000 calc(var(--b2) + 0.5px)),
+          radial-gradient(circle at 1% 16%, #0000 calc(var(--b2) * 0.75), #000 calc(calc(var(--b2) * 0.75) + 0.5px)),
+          radial-gradient(circle at 1% 52%, #0000 calc(var(--b2) * 0.75), #000 calc(calc(var(--b2) * 0.75) + 0.5px)),
+          radial-gradient(circle at 97% 104%, #0000 var(--b3), #000 calc(var(--b3) + 0.5px)),
+          radial-gradient(circle at 78% 105%, #0000 calc(var(--b3) * 0.75), #000 calc(calc(var(--b3) * 0.75) + 0.5px)),
+          radial-gradient(circle at 105% 84%, #0000 calc(var(--b3) * 0.75), #000 calc(calc(var(--b3) * 0.75) + 0.5px)),
+          radial-gradient(circle at 4% 103%, #0000 var(--b4), #000 calc(var(--b4) + 0.5px)),
+          radial-gradient(circle at 24% 106%, #0000 calc(var(--b4) * 0.75), #000 calc(calc(var(--b4) * 0.75) + 0.5px)),
+          radial-gradient(circle at -3% 82%, #0000 calc(var(--b4) * 0.75), #000 calc(calc(var(--b4) * 0.75) + 0.5px)),
+          radial-gradient(circle at 46% -5%, #0000 var(--b5), #000 calc(var(--b5) + 0.5px)),
+          radial-gradient(circle at 28% -3%, #0000 calc(var(--b5) * 0.75), #000 calc(calc(var(--b5) * 0.75) + 0.5px)),
+          radial-gradient(circle at 64% -3%, #0000 calc(var(--b5) * 0.75), #000 calc(calc(var(--b5) * 0.75) + 0.5px)),
+          radial-gradient(circle at 62% 56%, #0000 var(--b6), #000 calc(var(--b6) + 0.5px)),
+          radial-gradient(circle at 40% 50%, #0000 calc(var(--b6) * 0.8), #000 calc(calc(var(--b6) * 0.8) + 0.5px)),
+          radial-gradient(circle at 62% 30%, #0000 calc(var(--b6) * 0.8), #000 calc(calc(var(--b6) * 0.8) + 0.5px));
+        mask-composite: intersect;
+        animation:
+          pernik-b1 0.1s ease-out 0s forwards,
+          pernik-b2 0.1s ease-out 0.28s forwards,
+          pernik-b3 0.1s ease-out 0.56s forwards,
+          pernik-b4 0.1s ease-out 0.84s forwards,
+          pernik-b5 0.1s ease-out 1.12s forwards,
+          pernik-b6 0.14s ease-out 1.4s forwards,
+          pernik-munch 0.28s ease-out 0s 6,
+          pernik-gone 0.2s ease-in 1.5s forwards;
+      }
+
+      @keyframes pernik-b1 {
+        to {
+          --b1: 34cqmin;
+        }
+      }
+
+      @keyframes pernik-b2 {
+        to {
+          --b2: 30cqmin;
+        }
+      }
+
+      @keyframes pernik-b3 {
+        to {
+          --b3: 34cqmin;
+        }
+      }
+
+      @keyframes pernik-b4 {
+        to {
+          --b4: 32cqmin;
+        }
+      }
+
+      @keyframes pernik-b5 {
+        to {
+          --b5: 32cqmin;
+        }
+      }
+
+      @keyframes pernik-b6 {
+        to {
+          --b6: 80cqmin;
+        }
+      }
+
+      /* Perníček sebou při každém kousnutí cukne */
+      @keyframes pernik-munch {
+        0% {
+          translate: 0 0;
+          rotate: 0deg;
+        }
+        25% {
+          translate: 0 3px;
+          rotate: -1.5deg;
+        }
+        100% {
+          translate: 0 0;
+          rotate: 0deg;
+        }
+      }
+
+      @keyframes pernik-gone {
+        to {
+          opacity: 0;
+        }
+      }
+
+      /* Drobečky padající při kousání */
+      .p-pernik .w__extra {
+        left: 50%;
+        top: 35%;
+        width: 5px;
+        height: 5px;
+        border-radius: 40%;
+        background: #b8733f;
+        opacity: 0;
+        box-shadow:
+          -14cqmin 4cqmin 0 #8c4f25,
+          12cqmin -6cqmin 0 -1px #c98a52,
+          22cqmin 8cqmin 0 #a45a2a,
+          -26cqmin -4cqmin 0 -1px #fff6ea,
+          6cqmin 14cqmin 0 #8c4f25,
+          -6cqmin -16cqmin 0 #b8733f,
+          28cqmin -18cqmin 0 -1px #a45a2a;
+      }
+
+      .p-pernik .is-opening .w__extra {
+        animation: pernik-crumbs 1.7s ease-in forwards;
+      }
+
+      @keyframes pernik-crumbs {
+        0% {
+          opacity: 0;
+          translate: 0 0;
+        }
+        10% {
+          opacity: 1;
+        }
+        85% {
+          opacity: 1;
+        }
+        100% {
+          opacity: 0;
+          translate: 0 70cqmin;
+        }
+      }
+
+      /* ---------- 2. Mrazivá noc ---------- */
+
+      .p-mraz {
+        background:
+          radial-gradient(1.5px 1.5px at 8% 18%, #fff 50%, transparent),
+          radial-gradient(1px 1px at 22% 72%, #fff 50%, transparent),
+          radial-gradient(1.5px 1.5px at 41% 12%, #fff 50%, transparent),
+          radial-gradient(1px 1px at 63% 30%, #fff 50%, transparent),
+          radial-gradient(1.5px 1.5px at 81% 9%, #fff 50%, transparent),
+          radial-gradient(1px 1px at 93% 55%, #fff 50%, transparent),
+          radial-gradient(1200px 500px at 50% 0%, #2b4683, transparent 70%),
+          #0e1a36;
+        color: #c9d6f0;
+      }
+
+      .p-mraz h2 {
+        font-family: 'Josefin Sans', system-ui;
+        font-weight: 300;
+        font-size: clamp(1.8rem, 3.6vw, 2.8rem);
+        color: #f1f6ff;
+      }
+
+      .p-mraz .board {
+        gap: clamp(16px, 2vw, 28px);
+        padding: 8px 6px 14px;
+      }
+
+      .p-mraz .w {
+        border-radius: 50% 50% 8px 8px / 24% 24% 8px 8px;
+        box-shadow:
+          0 0 0 5px #dfe8f5,
+          0 12px 26px rgb(0 0 0 / 0.45);
+      }
+
+      .p-mraz .w__inside {
+        background: #1a2a52;
+      }
+
+      .p-mraz .w__door {
+        background:
+          radial-gradient(circle at 24% 30%, rgb(255 255 255 / 0.9) 0 5%, transparent 22%),
+          radial-gradient(circle at 76% 68%, rgb(255 255 255 / 0.75) 0 4%, transparent 20%),
+          radial-gradient(circle at 60% 18%, rgb(255 255 255 / 0.6) 0 3%, transparent 14%),
+          linear-gradient(165deg, #f1f6ff, #b4c7e6);
+        transition:
+          opacity 1.2s ease,
+          filter 1.2s ease,
+          transform 1.2s ease;
+      }
+
+      .p-mraz .w__num {
+        font-family: 'Josefin Sans', system-ui;
+        font-weight: 300;
+        font-size: 40cqmin;
+        color: #1d3263;
+      }
+
+      .p-mraz .is-locked .w__num {
+        color: #6378a3;
+      }
+
+      /* Připravené okénko svítí zevnitř teplým světlem */
+      .p-mraz .is-ready .w__door {
+        background:
+          radial-gradient(circle at 24% 30%, rgb(255 255 255 / 0.7) 0 5%, transparent 22%),
+          radial-gradient(circle at 50% 62%, #ffd98a, #f3a54a 48%, #c9b8c4 88%);
+      }
+
+      .p-mraz .is-ready .w__num {
+        color: #5a2a05;
+      }
+
+      .p-mraz .is-open .w__door {
+        opacity: 0;
+        filter: blur(14px);
+        transform: scale(1.08);
+      }
+
+      /* Sníh na parapetu, zůstává i po otevření */
+      .p-mraz .w__extra {
+        left: -9px;
+        right: -9px;
+        bottom: -13px;
+        height: 14px;
+        border-radius: 10px 10px 4px 4px;
+        background:
+          radial-gradient(circle at 20% 30%, #fff 40%, transparent 42%) 0 -6px / 26px 16px repeat-x,
+          #f4f8ff;
+        box-shadow: 0 3px 0 rgb(0 0 0 / 0.25);
+      }
+
+      /* ---------- 3. Riso tisk ---------- */
+
+      .p-riso {
+        --pink: #ff48b0;
+        --blue: #3255a4;
+        --yellow: #ffe800;
+        background: #dcebe1;
+        color: #24407f;
+      }
+
+      .p-riso h2 {
+        font-family: 'Rubik Mono One', system-ui;
+        font-weight: 400;
+        font-size: clamp(1.3rem, 2.6vw, 2rem);
+        color: var(--pink);
+        text-shadow: 3px 2px 0 rgb(50 85 164 / 0.55);
+      }
+
+      .p-riso .board {
+        gap: clamp(6px, 1vw, 12px);
+        perspective: 900px;
+      }
+
+      .p-riso .w {
+        border-radius: 3px;
+      }
+
+      /* Fotka vytištěná dvěma barvami: černobílá násobená přes růžovou */
+      .p-riso .w__inside {
+        background: var(--pink);
+      }
+
+      .p-riso .w__inside img {
+        filter: grayscale(1) contrast(1.2);
+        mix-blend-mode: multiply;
+      }
+
+      .p-riso .w__door {
+        transform-origin: center top;
+        transition:
+          transform 0.8s cubic-bezier(0.3, 0.7, 0.3, 1),
+          opacity 0.5s 0.3s;
+      }
+
+      .p-riso [data-tone3='0'] .w__door {
+        background:
+          radial-gradient(rgb(255 72 176 / 0.6) 28%, transparent 31%) 0 0 / 6px 6px,
+          var(--blue);
+      }
+
+      .p-riso [data-tone3='1'] .w__door {
+        background:
+          radial-gradient(rgb(50 85 164 / 0.45) 28%, transparent 31%) 0 0 / 6px 6px,
+          var(--pink);
+      }
+
+      .p-riso [data-tone3='2'] .w__door {
+        background:
+          radial-gradient(rgb(255 72 176 / 0.55) 28%, transparent 31%) 0 0 / 6px 6px,
+          var(--yellow);
+      }
+
+      .p-riso .w__num {
+        font-family: 'Rubik Mono One', system-ui;
+        font-size: 30cqmin;
+      }
+
+      /* Barvy čísel lehce „ujeté“ jako u skutečného tisku */
+      .p-riso [data-tone3='0'] .w__num {
+        color: var(--yellow);
+        text-shadow: -2px 1px 0 var(--pink);
+      }
+
+      .p-riso [data-tone3='1'] .w__num {
+        color: var(--blue);
+        text-shadow: 2px 1px 0 var(--yellow);
+      }
+
+      .p-riso [data-tone3='2'] .w__num {
+        color: var(--pink);
+        text-shadow: 2px -1px 0 var(--blue);
+      }
+
+      .p-riso .is-locked .w__num {
+        opacity: 0.75;
+      }
+
+      /* Připravené okénko má perforaci na odtržení */
+      .p-riso .is-ready .w__door::after {
+        content: '';
+        position: absolute;
+        inset: 6px;
+        border: 2px dashed #fff;
+        border-radius: 2px;
+      }
+
+      .p-riso .is-open .w__door {
+        transform: rotateX(-100deg);
+        opacity: 0;
+      }
+
+      /* ---------- 4. Dárky ---------- */
+
+      .p-darky {
+        background: linear-gradient(#3a1626, #22101a);
+        color: #f1d9e2;
+      }
+
+      .p-darky h2 {
+        font-family: 'Fraunces', Georgia, serif;
+        font-weight: 600;
+        color: #ffd7a8;
+      }
+
+      .p-darky .board {
+        gap: clamp(10px, 1.6vw, 22px);
+      }
+
+      .p-darky .w {
+        border-radius: 6px;
+      }
+
+      .p-darky .w__inside {
+        background: #12070c;
+      }
+
+      .p-darky .w__door {
+        box-shadow: 0 6px 0 rgb(0 0 0 / 0.35);
+        transition:
+          transform 0.8s cubic-bezier(0.5, -0.3, 0.6, 1),
+          opacity 0.8s;
+      }
+
+      .p-darky [data-tone='0'] {
+        --ribbon: #f6d36b;
+      }
+      .p-darky [data-tone='0'] .w__door {
+        background: repeating-linear-gradient(45deg, #c8283a 0 10px, #e2465a 10px 20px);
+      }
+
+      .p-darky [data-tone='1'] {
+        --ribbon: #d63447;
+      }
+      .p-darky [data-tone='1'] .w__door {
+        background:
+          radial-gradient(#f4f1e8 22%, transparent 25%) 0 0 / 14px 14px,
+          #1f6b4a;
+      }
+
+      .p-darky [data-tone='2'] {
+        --ribbon: #8b1d2c;
+      }
+      .p-darky [data-tone='2'] .w__door {
+        background: linear-gradient(135deg, #ecc15c, #c9922a);
+      }
+
+      .p-darky [data-tone='3'] {
+        --ribbon: #e8455a;
+      }
+      .p-darky [data-tone='3'] .w__door {
+        background:
+          radial-gradient(#ffd27a 12%, transparent 15%) 0 0 / 18px 18px,
+          #1d2f63;
+      }
+
+      .p-darky [data-tone='4'] {
+        --ribbon: #1f6b4a;
+      }
+      .p-darky [data-tone='4'] .w__door {
+        background: repeating-linear-gradient(0deg, #f6efe6 0 8px, #d63447 8px 10px);
+      }
+
+      /* Stuha přes dárek a mašle uprostřed */
+      .p-darky .w__deco {
+        inset: 0;
+        background:
+          linear-gradient(90deg, transparent 44%, var(--ribbon) 44% 56%, transparent 56%),
+          linear-gradient(transparent 44%, var(--ribbon) 44% 56%, transparent 56%);
+      }
+
+      .p-darky .w__deco::after {
+        content: '';
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        width: 30cqmin;
+        height: 16cqmin;
+        translate: -50% -50%;
+        background:
+          radial-gradient(circle at 25% 50%, var(--ribbon) 44%, transparent 47%),
+          radial-gradient(circle at 75% 50%, var(--ribbon) 44%, transparent 47%);
+        filter: drop-shadow(0 2px 0 rgb(0 0 0 / 0.25));
+      }
+
+      /* Jmenovka s číslem */
+      .p-darky .w__num {
+        position: absolute;
+        top: 9%;
+        left: 7%;
+        padding: 0.06em 0.4em 0.1em;
+        border-radius: 3px 12px 12px 3px;
+        background: #fbf6ec;
+        color: #3a1626;
+        font-family: 'Fraunces', Georgia, serif;
+        font-weight: 600;
+        font-size: 22cqmin;
+        rotate: -8deg;
+        box-shadow: 0 2px 0 rgb(0 0 0 / 0.3);
+      }
+
+      .p-darky .is-locked .w__door {
+        filter: brightness(0.82) saturate(0.85);
+      }
+
+      /* Připravený dárek se občas zavrtí */
+      .p-darky .is-ready .w__door {
+        animation: wiggle 3s ease-in-out infinite;
+      }
+
+      @keyframes wiggle {
+        0%,
+        80%,
+        100% {
+          rotate: 0deg;
+        }
+        84% {
+          rotate: -3deg;
+        }
+        88% {
+          rotate: 3deg;
+        }
+        92% {
+          rotate: -2deg;
+        }
+        96% {
+          rotate: 1deg;
+        }
+      }
+
+      .p-darky .is-open .w__door {
+        transform: translateY(-125%) rotate(-10deg);
+        opacity: 0;
+        animation: none;
+      }
+
+      /* ---------- 5. Domeček s okenicemi ---------- */
+
+      .p-domek {
+        background: linear-gradient(#0f1626, #1c2740);
+        color: #c9d1e2;
+      }
+
+      .p-domek h2 {
+        font-family: 'Alegreya', Georgia, serif;
+        font-weight: 800;
+        color: #ffd88a;
+      }
+
+      .p-domek .stage {
+        position: relative;
+        margin-top: clamp(50px, 7vw, 100px);
+        padding: clamp(18px, 2.6vw, 40px);
+        background: repeating-linear-gradient(90deg, #8e2b20 0 46px, #7d241a 46px 48px);
+        border-radius: 0 0 4px 4px;
+      }
+
+      /* Střecha se sněhem */
+      .p-domek .stage::before {
+        content: '';
+        position: absolute;
+        left: -2%;
+        right: -2%;
+        bottom: 100%;
+        height: clamp(44px, 6.5vw, 96px);
+        background: linear-gradient(#f4f8ff 0 14%, #2b2f38 14%);
+        clip-path: polygon(0 100%, 50% 0, 100% 100%);
+      }
+
+      .p-domek .board {
+        gap: clamp(14px, 2vw, 28px);
+      }
+
+      .p-domek .w {
+        border-radius: 2px;
+        box-shadow:
+          0 0 0 5px #f2ede4,
+          0 0 0 7px rgb(0 0 0 / 0.25);
+      }
+
+      .p-domek .w__inside {
+        background: radial-gradient(circle at 50% 60%, #ffe3a0, #f0a43a 75%);
+      }
+
+      .p-domek .w__door {
+        right: auto;
+        width: 50%;
+        border: 2px solid #163728;
+        border-radius: 1px;
+        background: repeating-linear-gradient(0deg, #2a5c46 0 9px, #1b4232 9px 11px);
+      }
+
+      .p-domek .w__door--l {
+        z-index: 1;
+      }
+
+      .p-domek .w__door--r {
+        left: auto;
+        right: 0;
+        transform-origin: right center;
+      }
+
+      /* Smaltovaná cedulka jako u domovních čísel, přesahuje přes obě okenice */
+      .p-domek .w__num {
+        position: absolute;
+        right: 0;
+        top: 50%;
+        z-index: 1;
+        translate: 50% -50%;
+        padding: 0.12em 0.4em 0.16em;
+        border: 2px solid #fff;
+        border-radius: 5px;
+        background: #1f3f8f;
+        box-shadow: 0 0 0 1.5px #1f3f8f;
+        color: #fff;
+        font-family: 'Alegreya', Georgia, serif;
+        font-weight: 800;
+        font-size: 20cqmin;
+      }
+
+      /* Štědrý den má červené popisné číslo */
+      .p-domek .w--big .w__num {
+        background: #b3212b;
+        box-shadow: 0 0 0 1.5px #b3212b;
+        font-size: 16cqmin;
+      }
+
+      .p-domek .is-locked .w__door {
+        filter: brightness(0.8);
+      }
+
+      /* Připravené okénko má okenice pootevřené a prosvítá světlo */
+      .p-domek .is-ready {
+        box-shadow:
+          0 0 0 5px #f2ede4,
+          0 0 0 7px rgb(0 0 0 / 0.25),
+          0 0 34px rgb(255 200 110 / 0.55);
+      }
+
+      .p-domek .is-ready .w__door {
+        transform: rotateY(-16deg);
+      }
+
+      .p-domek .is-ready .w__door--r {
+        transform: rotateY(16deg);
+      }
+
+      .p-domek .is-open .w__door {
+        transform: rotateY(-112deg);
+      }
+
+      .p-domek .is-open .w__door--r {
+        transform: rotateY(112deg);
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .w__door {
+          transition: none !important;
+          animation: none !important;
+        }
+
+        .w.is-shake,
+        .p-pernik .w__extra {
+          animation: none !important;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="intro">
+      <h1>Pět návrhů, jak by mohla vypadat okénka</h1>
+      <p>
+        Každý návrh je živý. Okénka 1 a 2 jsou už otevřená, okénko 3 čeká na otevření a ostatní jsou
+        zamčená. Klikni na trojku a uvidíš, jak se okénko otevírá. Otevřené okénko se dalším
+        kliknutím zase zavře, takže si to můžeš zkusit znovu.
+      </p>
+    </header>
+
+    <section class="proposal p-pernik">
+      <div class="proposal__text">
+        <h2>Návrh 1: Perníček</h2>
+        <p>
+          Okénka jako upečené perníčky s bílou polevou, hravé a teplé. Při otevření perníček
+          někdo postupně okouše, padají z něj drobečky a pod ním se objeví fotka v polevovém
+          rámečku.
+        </p>
+      </div>
+      <div class="stage"><div class="board"></div></div>
+    </section>
+
+    <section class="proposal p-mraz">
+      <div class="proposal__text">
+        <h2>Návrh 2: Mrazivá noc</h2>
+        <p>
+          Okna s obloukem zamrzlá jinovatkou a se sněhem na parapetu. Okénko, které už jde otevřít,
+          svítí zevnitř teplým světlem a námraza z něj při otevření roztaje.
+        </p>
+      </div>
+      <div class="stage"><div class="board"></div></div>
+    </section>
+
+    <section class="proposal p-riso">
+      <div class="proposal__text">
+        <h2>Návrh 3: Riso tisk</h2>
+        <p>
+          Jako ručně tištěný plakát: rastr teček, tři barvy a lehce ujetý tisk. Okénko se odtrhne
+          nahoru po perforaci a fotka uvnitř je dvoubarevná, růžovo-černá.
+        </p>
+      </div>
+      <div class="stage"><div class="board"></div></div>
+    </section>
+
+    <section class="proposal p-darky">
+      <div class="proposal__text">
+        <h2>Návrh 4: Dárky</h2>
+        <p>
+          Každé okénko je zabalený dárek s mašlí a jmenovkou. Dárek, který už jde otevřít, se občas
+          zavrtí a při otevření víko odletí nahoru.
+        </p>
+      </div>
+      <div class="stage"><div class="board"></div></div>
+    </section>
+
+    <section class="proposal p-domek">
+      <div class="proposal__text">
+        <h2>Návrh 5: Domeček s okenicemi</h2>
+        <p>
+          Dřevěná fasáda se zasněženou střechou a okenicemi, které se otevírají do stran. Čísla
+          jsou na smaltovaných cedulkách jako domovní čísla, Štědrý den má červené.
+        </p>
+      </div>
+      <div class="stage"><div class="board" data-doors="double"></div></div>
+    </section>
+
+    <script>
+      // Stejné pořadí okének jako v kalendáři (src/App.tsx).
+      const ORDER = [
+        7, 15, 2, 21, 11, 18, 4, 23, 9, 1, 14, 20, 6, 12, 24, 3, 17, 10, 22, 5, 13, 19, 8, 16,
+      ]
+      const OPENED = new Set([1, 2])
+      const READY = new Set([3])
+
+      // Fotky bere z editoru, takže se ukážou jen při `npm run dev`.
+      function photo(day) {
+        const img = document.createElement('img')
+        img.src = `/api/admin/photo/${day}`
+        img.alt = ''
+        img.onerror = () => img.remove()
+        return img
+      }
+
+      for (const board of document.querySelectorAll('.board')) {
+        const double = board.dataset.doors === 'double'
+
+        ORDER.forEach((day, i) => {
+          const state = OPENED.has(day) ? 'is-open' : READY.has(day) ? 'is-ready' : 'is-locked'
+          const w = document.createElement('button')
+          w.type = 'button'
+          w.className = `w ${state}${day === 24 ? ' w--big' : ''}`
+          w.dataset.tone = i % 5
+          w.dataset.tone3 = i % 3
+          w.setAttribute('aria-label', `Okénko ${day}`)
+
+          const inside = document.createElement('span')
+          inside.className = 'w__inside'
+          if (state !== 'is-locked') inside.append(photo(day))
+
+          const door = document.createElement('span')
+          door.className = double ? 'w__door w__door--l' : 'w__door'
+          door.innerHTML = `<span class="w__deco"></span><span class="w__num">${day}</span>`
+
+          w.append(inside, door)
+          if (double) {
+            const right = document.createElement('span')
+            right.className = 'w__door w__door--r'
+            w.append(right)
+          }
+          const extra = document.createElement('span')
+          extra.className = 'w__extra'
+          w.append(extra)
+
+          board.append(w)
+        })
+
+        board.addEventListener('click', (e) => {
+          const w = e.target.closest('.w')
+          if (!w) return
+          if (w.classList.contains('is-locked')) {
+            w.classList.add('is-shake')
+            w.addEventListener('animationend', () => w.classList.remove('is-shake'), {
+              once: true,
+            })
+            return
+          }
+          w.classList.toggle('is-ready')
+          if (w.classList.toggle('is-open')) {
+            // Animace otevírání jen po kliknutí, ne u okének otevřených při načtení
+            w.classList.add('is-opening')
+            clearTimeout(w.openingTimer)
+            w.openingTimer = setTimeout(() => w.classList.remove('is-opening'), 1900)
+          } else {
+            w.classList.remove('is-opening')
+          }
+        })
+      }
+    </script>
+  </body>
+</html>

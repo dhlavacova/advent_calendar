@@ -1,0 +1,877 @@
+<!doctype html>
+<html lang="cs">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Vzhled kalendáře</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Josefin+Sans:wght@300;600&family=Manrope:wght@500;600;700;800&display=swap"
+    />
+    <style>
+      /* ================================================
+         Rozhraní stránky
+         ================================================ */
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: 'Manrope', system-ui, sans-serif;
+        background: #f1e9dc;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      .app {
+        position: relative;
+        isolation: isolate;
+        min-height: 100svh;
+        padding: 104px clamp(16px, 4vw, 56px) 56px;
+        overflow: hidden;
+        color: var(--ink);
+      }
+
+      /* Pozadí: barevné přechody, jemný vzor tématu a zrnitost */
+      .bg {
+        position: absolute;
+        inset: 0;
+        z-index: -1;
+        background: var(--bg);
+      }
+
+      .bg::before,
+      .bg::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+      }
+
+      .bg::before {
+        background: var(--pattern, none);
+        opacity: var(--pattern-opacity, 1);
+      }
+
+      .bg::after {
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+        opacity: 0.09;
+        mix-blend-mode: overlay;
+      }
+
+      /* Plovoucí lišta s přepínačem vzhledu */
+      .topbar {
+        position: fixed;
+        z-index: 10;
+        top: 14px;
+        left: 50%;
+        translate: -50% 0;
+        width: min(1280px, calc(100% - 32px));
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        padding: 6px 6px 6px 20px;
+        border: 1px solid var(--glass-border);
+        border-radius: 999px;
+        background: var(--glass-bg);
+        backdrop-filter: blur(18px) saturate(150%);
+        -webkit-backdrop-filter: blur(18px) saturate(150%);
+        box-shadow: 0 10px 40px -12px rgb(0 0 0 / 0.35);
+        color: var(--ink);
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-weight: 800;
+        letter-spacing: -0.01em;
+        white-space: nowrap;
+      }
+
+      .brand svg {
+        width: 22px;
+        height: 22px;
+        color: var(--accent);
+      }
+
+      .themes {
+        display: flex;
+        gap: 2px;
+        overflow-x: auto;
+        scrollbar-width: none;
+      }
+
+      .themes button {
+        flex: none;
+        padding: 9px 15px;
+        border: 0;
+        border-radius: 999px;
+        background: transparent;
+        color: var(--ink-soft);
+        font: 600 0.88rem/1 'Manrope', system-ui, sans-serif;
+        cursor: pointer;
+        transition:
+          background 0.2s,
+          color 0.2s;
+      }
+
+      .themes button:hover {
+        color: var(--ink);
+        background: var(--glass-bg);
+      }
+
+      .themes button[aria-pressed='true'] {
+        background: var(--ink);
+        color: var(--on-ink);
+      }
+
+      .themes button:focus-visible,
+      .w:focus-visible {
+        outline: 2px solid var(--accent);
+        outline-offset: 3px;
+      }
+
+      @media (max-width: 860px) {
+        .app {
+          padding-top: 132px;
+        }
+
+        .topbar {
+          flex-direction: column;
+          align-items: stretch;
+          gap: 6px;
+          padding: 12px 8px 8px;
+          border-radius: 24px;
+        }
+
+        .brand {
+          padding-left: 10px;
+        }
+      }
+
+      /* Úvod nad kalendářem */
+      .hero {
+        max-width: 1280px;
+        margin: 0 auto 32px;
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 24px;
+        flex-wrap: wrap;
+      }
+
+      .hero h1 {
+        margin: 0 0 10px;
+        font-family: var(--display);
+        font-weight: var(--display-weight, 700);
+        font-size: clamp(2.4rem, 6vw, 4.6rem);
+        line-height: 0.95;
+        letter-spacing: -0.03em;
+      }
+
+      .hero p {
+        margin: 0;
+        max-width: 46ch;
+        font-size: 1.08rem;
+        line-height: 1.5;
+        color: var(--ink-soft);
+      }
+
+      .progress {
+        min-width: 220px;
+        padding: 16px 20px;
+        border: 1px solid var(--glass-border);
+        border-radius: 20px;
+        background: var(--glass-bg);
+        backdrop-filter: blur(14px);
+        -webkit-backdrop-filter: blur(14px);
+      }
+
+      .progress__value {
+        display: flex;
+        align-items: baseline;
+        gap: 6px;
+        font-size: 2rem;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .progress__value small {
+        font-size: 0.95rem;
+        font-weight: 600;
+        color: var(--ink-soft);
+      }
+
+      .progress__bar {
+        height: 6px;
+        margin-top: 10px;
+        border-radius: 999px;
+        background: var(--glass-border);
+        overflow: hidden;
+      }
+
+      .progress__bar span {
+        display: block;
+        height: 100%;
+        border-radius: inherit;
+        background: var(--accent);
+        transition: width 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
+      }
+
+      .stage {
+        max-width: 1280px;
+        margin: 0 auto;
+      }
+
+      /* Popis vybraného vzhledu pod kalendářem */
+      .about {
+        max-width: 1280px;
+        margin: 36px auto 0;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px 32px;
+        flex-wrap: wrap;
+        padding: 20px 24px;
+        border: 1px solid var(--glass-border);
+        border-radius: 24px;
+        background: var(--glass-bg);
+        backdrop-filter: blur(14px);
+        -webkit-backdrop-filter: blur(14px);
+      }
+
+      .about h2 {
+        margin: 0 0 4px;
+        font-family: var(--display);
+        font-weight: var(--display-weight, 700);
+        font-size: 1.5rem;
+        letter-spacing: -0.01em;
+      }
+
+      .about p {
+        margin: 0;
+        max-width: 70ch;
+        line-height: 1.55;
+        color: var(--ink-soft);
+      }
+
+      /* ================================================
+         Mřížka a společné chování okénka
+         ================================================ */
+
+      .board {
+        display: grid;
+        grid-template-columns: repeat(9, 1fr);
+        grid-template-rows: repeat(3, 1fr);
+        grid-auto-flow: dense;
+        aspect-ratio: 3 / 1.12;
+        gap: clamp(10px, 1.4vw, 20px);
+        perspective: 1400px;
+      }
+
+      .w {
+        position: relative;
+        container-type: size;
+        padding: 0;
+        border: 0;
+        background: none;
+        color: inherit;
+        font: inherit;
+        cursor: pointer;
+        transform-style: preserve-3d;
+        transition: translate 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+      }
+
+      .w:not(.is-locked):hover {
+        translate: 0 -4px;
+      }
+
+      .w--big {
+        grid-column: span 2;
+        grid-row: span 2;
+      }
+
+      .w.is-locked {
+        cursor: not-allowed;
+      }
+
+      .w__inside {
+        position: absolute;
+        inset: 0;
+        overflow: hidden;
+        border-radius: inherit;
+        background: var(--inside, #000);
+      }
+
+      .w__inside img {
+        display: block;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      .w__door {
+        position: absolute;
+        inset: 0;
+        display: grid;
+        place-items: center;
+        border-radius: inherit;
+        transform-origin: left center;
+        transition: transform 0.9s cubic-bezier(0.3, 0.7, 0.3, 1);
+        backface-visibility: hidden;
+      }
+
+      .w__num {
+        position: relative;
+        line-height: 1;
+      }
+
+      .w__deco {
+        position: absolute;
+        pointer-events: none;
+      }
+
+      /* Štítek „Dnes“, zámeček a číslo přes otevřenou fotku */
+      .w__badge,
+      .w__lock,
+      .w__chip {
+        position: absolute;
+        z-index: 3;
+        pointer-events: none;
+        transition: opacity 0.3s;
+      }
+
+      .w__badge {
+        top: 8px;
+        right: 8px;
+        padding: 4px 9px;
+        border-radius: 999px;
+        background: var(--accent);
+        color: var(--on-accent);
+        font-size: clamp(9px, 10cqmin, 12px);
+        font-weight: 800;
+        letter-spacing: 0.01em;
+        animation: pulse 2.2s ease-out infinite;
+      }
+
+      @keyframes pulse {
+        0% {
+          box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 70%, transparent);
+        }
+        70%,
+        100% {
+          box-shadow: 0 0 0 10px transparent;
+        }
+      }
+
+      .w__lock {
+        top: 9px;
+        right: 9px;
+        width: clamp(12px, 11cqmin, 16px);
+        height: clamp(12px, 11cqmin, 16px);
+        color: var(--lock, #fff);
+        opacity: 0.55;
+      }
+
+      .w__chip {
+        left: 8px;
+        bottom: 8px;
+        min-width: 2em;
+        padding: 4px 9px;
+        border: 1px solid rgb(255 255 255 / 0.35);
+        border-radius: 999px;
+        background: rgb(255 255 255 / 0.22);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        color: #fff;
+        font-size: clamp(10px, 11cqmin, 14px);
+        font-weight: 800;
+        text-align: center;
+        text-shadow: 0 1px 2px rgb(0 0 0 / 0.3);
+        opacity: 0;
+      }
+
+      .w:not(.is-ready) .w__badge,
+      .w:not(.is-locked) .w__lock {
+        display: none;
+      }
+
+      .w.is-open .w__chip {
+        opacity: 1;
+        transition-delay: 0.6s;
+      }
+
+      .w.is-shake {
+        animation: shake 0.4s;
+      }
+
+      @keyframes shake {
+        20%,
+        60% {
+          translate: -4px 0;
+        }
+        40%,
+        80% {
+          translate: 4px 0;
+        }
+      }
+
+      /* Po přepnutí vzhledu okénka naskočí jedno po druhém */
+      .w.is-entering {
+        animation: enter 0.55s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+        animation-delay: calc(var(--i) * 16ms);
+      }
+
+      @keyframes enter {
+        from {
+          opacity: 0;
+          scale: 0.92;
+        }
+      }
+
+      @media (max-width: 700px) {
+        .board {
+          grid-template-columns: repeat(3, 1fr);
+          grid-template-rows: none;
+          aspect-ratio: auto;
+        }
+
+        .w {
+          aspect-ratio: 1;
+        }
+      }
+
+      /* ================================================
+         Styl okének: Dárky
+         ================================================ */
+
+      .s-darky {
+        --tag-bg: #fffaf2;
+        --tag-ink: #3a1626;
+        --tag-font: 'Fraunces', Georgia, serif;
+        --ribbon-w: 12%;
+        --lock: #fff;
+      }
+
+      .s-darky .w {
+        border-radius: 16px;
+      }
+
+      .s-darky .w__door {
+        overflow: hidden;
+        box-shadow:
+          inset 0 1px 0 rgb(255 255 255 / 0.25),
+          0 2px 4px rgb(0 0 0 / 0.14),
+          0 18px 32px -14px rgb(0 0 0 / 0.6);
+        transition:
+          transform 0.8s cubic-bezier(0.5, -0.3, 0.6, 1),
+          opacity 0.8s;
+      }
+
+      /* Lesk papíru */
+      .s-darky .w__door::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(
+          135deg,
+          rgb(255 255 255 / 0.22),
+          transparent 45%,
+          rgb(0 0 0 / 0.12)
+        );
+      }
+
+      /* Stuha se světlým proužkem uprostřed a mašle */
+      .s-darky .w__deco {
+        inset: 0;
+        --ribbon-hi: color-mix(in srgb, var(--ribbon) 70%, white);
+        background:
+          linear-gradient(
+            90deg,
+            transparent calc(50% - var(--ribbon-w) / 2),
+            var(--ribbon) 0,
+            var(--ribbon-hi) 50%,
+            var(--ribbon) calc(50% + var(--ribbon-w) / 2),
+            transparent 0
+          ),
+          linear-gradient(
+            transparent calc(50% - var(--ribbon-w) / 2),
+            var(--ribbon) 0,
+            var(--ribbon-hi) 50%,
+            var(--ribbon) calc(50% + var(--ribbon-w) / 2),
+            transparent 0
+          );
+      }
+
+      .s-darky .w__deco::after {
+        content: '';
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        width: 32cqmin;
+        height: 17cqmin;
+        translate: -50% -50%;
+        background:
+          radial-gradient(circle at 50% 50%, var(--ribbon) 16%, transparent 18%),
+          radial-gradient(ellipse 34% 46% at 27% 50%, var(--ribbon-hi) 30%, var(--ribbon) 70%, transparent 74%),
+          radial-gradient(ellipse 34% 46% at 73% 50%, var(--ribbon-hi) 30%, var(--ribbon) 70%, transparent 74%);
+        filter: drop-shadow(0 3px 4px rgb(0 0 0 / 0.25));
+      }
+
+      .s-darky .w__num {
+        position: absolute;
+        top: 9%;
+        left: 8%;
+        padding: 0.1em 0.5em 0.14em;
+        border-radius: 999px;
+        background: var(--tag-bg);
+        color: var(--tag-ink);
+        font-family: var(--tag-font);
+        font-weight: 700;
+        font-size: 20cqmin;
+        rotate: -6deg;
+        box-shadow: 0 4px 12px rgb(0 0 0 / 0.25);
+      }
+
+      .s-darky .is-locked .w__door {
+        filter: brightness(0.86) saturate(0.85);
+      }
+
+      .s-darky .is-ready .w__door {
+        box-shadow:
+          inset 0 1px 0 rgb(255 255 255 / 0.25),
+          0 0 0 3px var(--accent),
+          0 18px 40px -10px color-mix(in srgb, var(--accent) 55%, transparent);
+        animation: wiggle 3s ease-in-out infinite;
+      }
+
+      @keyframes wiggle {
+        0%,
+        80%,
+        100% {
+          rotate: 0deg;
+        }
+        84% {
+          rotate: -3deg;
+        }
+        88% {
+          rotate: 3deg;
+        }
+        92% {
+          rotate: -2deg;
+        }
+        96% {
+          rotate: 1deg;
+        }
+      }
+
+      .s-darky .is-open .w__door {
+        transform: translateY(-125%) rotate(-10deg);
+        opacity: 0;
+        animation: none;
+      }
+
+      /* ================================================
+         Témata
+         ================================================ */
+
+      /* Severské Vánoce */
+      .t-sever {
+        --bg:
+          radial-gradient(60% 60% at 0% 0%, #fdfaf4, transparent 70%),
+          radial-gradient(50% 50% at 100% 15%, #dfe8da, transparent 70%),
+          radial-gradient(60% 55% at 60% 105%, #ead6bf, transparent 70%), #f1e9dc;
+        --ink: #2c2823;
+        --ink-soft: rgb(44 40 35 / 0.65);
+        --on-ink: #f6f1e8;
+        --glass-bg: rgb(255 255 255 / 0.5);
+        --glass-border: rgb(255 255 255 / 0.85);
+        --accent: #b8402f;
+        --on-accent: #fff;
+        --display: 'Josefin Sans', system-ui, sans-serif;
+        --display-weight: 300;
+        --tag-bg: #ffffff;
+        --tag-ink: #2c2823;
+        --tag-font: 'Josefin Sans', system-ui, sans-serif;
+        --ribbon-w: 5%;
+        --inside: #3d3a35;
+      }
+
+      .t-sever .w__num {
+        font-weight: 600;
+        padding-top: 0.2em;
+      }
+
+      .t-sever .w__deco::after {
+        width: 24cqmin;
+        height: 13cqmin;
+      }
+
+      .t-sever [data-tone='0'] {
+        --ribbon: #f8f6f2;
+      }
+      .t-sever [data-tone='0'] .w__door {
+        background: #c49a6c;
+      }
+      .t-sever [data-tone='1'] {
+        --ribbon: #b8402f;
+      }
+      .t-sever [data-tone='1'] .w__door {
+        background:
+          radial-gradient(#b8402f 14%, transparent 18%) 0 0 / 12px 12px,
+          #f9f7f2;
+      }
+      .t-sever [data-tone='2'] {
+        --ribbon: #f8f6f2;
+      }
+      .t-sever [data-tone='2'] .w__door {
+        background: #9caf88;
+      }
+      .t-sever [data-tone='3'] {
+        --ribbon: #8a6a4f;
+      }
+      .t-sever [data-tone='3'] .w__door {
+        background: #ddaea6;
+      }
+      .t-sever [data-tone='4'] {
+        --ribbon: #c49a6c;
+      }
+      .t-sever [data-tone='4'] .w__door {
+        background:
+          radial-gradient(#f7f5f0 10%, transparent 13%) 0 0 / 16px 16px,
+          #3a3d40;
+      }
+
+      /* Smaragd a zlato */
+      .t-smaragd {
+        --bg:
+          radial-gradient(60% 50% at 50% -5%, #1f8064, transparent 70%),
+          radial-gradient(40% 45% at 100% 100%, rgb(212 175 55 / 0.25), transparent 70%),
+          radial-gradient(60% 60% at 0% 100%, #021510, transparent 70%), #0a3328;
+        --pattern:
+          radial-gradient(circle, #e8c766 1.4px, transparent 2px) 0 0 / 46px 46px,
+          radial-gradient(circle, #e8c766 1px, transparent 1.5px) 23px 17px / 46px 46px;
+        --pattern-opacity: 0.3;
+        --ink: #f5ecd4;
+        --ink-soft: rgb(245 236 212 / 0.7);
+        --on-ink: #0a3328;
+        --glass-bg: rgb(255 255 255 / 0.06);
+        --glass-border: rgb(232 199 102 / 0.28);
+        --accent: #e8c766;
+        --on-accent: #0a3328;
+        --display: 'Fraunces', Georgia, serif;
+        --tag-bg: #16181b;
+        --tag-ink: #e8c766;
+        --inside: #06221a;
+      }
+
+      .t-smaragd [data-tone='0'] {
+        --ribbon: #d4af37;
+      }
+      .t-smaragd [data-tone='0'] .w__door {
+        background: #17191c;
+      }
+      .t-smaragd [data-tone='1'] {
+        --ribbon: #1b1d20;
+      }
+      .t-smaragd [data-tone='1'] .w__door {
+        background: linear-gradient(135deg, #f3dc85, #b8902c);
+      }
+      .t-smaragd [data-tone='2'] {
+        --ribbon: #d4af37;
+      }
+      .t-smaragd [data-tone='2'] .w__door {
+        background: #1b6e55;
+      }
+      .t-smaragd [data-tone='3'] {
+        --ribbon: #0f4a3a;
+      }
+      .t-smaragd [data-tone='3'] .w__door {
+        background: #eee3cb;
+      }
+      .t-smaragd [data-tone='4'] {
+        --ribbon: #d4af37;
+      }
+      .t-smaragd [data-tone='4'] .w__door {
+        background: #6e1428;
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .w,
+        .w__door,
+        .w__badge,
+        .w.is-entering,
+        .w.is-shake {
+          transition: none !important;
+          animation: none !important;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="brand">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path
+            fill="currentColor"
+            d="M12 2l2.6 6.3 6.8.5-5.2 4.4 1.6 6.6L12 16.3 6.2 19.8l1.6-6.6L2.6 8.8l6.8-.5z"
+          />
+        </svg>
+        Adventní kalendář
+      </div>
+      <nav class="themes" aria-label="Vzhled kalendáře"></nav>
+    </header>
+
+    <main class="app">
+      <div class="bg" aria-hidden="true"></div>
+
+      <section class="hero">
+        <div>
+          <h1>Adventní kalendář</h1>
+          <p>Do Štědrého dne zbývá 21 dní. Dnešní okénko je označené, klikni na něj.</p>
+        </div>
+        <div class="progress" aria-live="polite">
+          <div class="progress__value"><span id="opened">2</span><small>z 24 otevřeno</small></div>
+          <div class="progress__bar"><span id="bar"></span></div>
+        </div>
+      </section>
+
+      <div class="stage"><div class="board"></div></div>
+
+      <section class="about">
+        <div>
+          <h2 id="about-title"></h2>
+          <p id="about-text"></p>
+        </div>
+      </section>
+    </main>
+
+    <script>
+      const THEMES = {
+        sever: {
+          name: 'Severské Vánoce',
+          text: 'Dárky v hnědém papíru a tlumených barvách, převázané provázkem. Klidné a útulné.',
+        },
+        smaragd: {
+          name: 'Smaragd a zlato',
+          text: 'Černé, zlaté, smaragdové a vínové dárky se zlatými stuhami. Slavnostní večer.',
+        },
+      }
+
+      // Stejné pořadí okének jako v kalendáři (src/App.tsx).
+      const ORDER = [
+        7, 15, 2, 21, 11, 18, 4, 23, 9, 1, 14, 20, 6, 12, 24, 3, 17, 10, 22, 5, 13, 19, 8, 16,
+      ]
+      const opened = new Set([1, 2])
+      const READY = 3
+      const LOCK_ICON =
+        '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M7 10V7a5 5 0 0 1 10 0v3h1a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2zm2 0h6V7a3 3 0 0 0-6 0z"/></svg>'
+
+      const app = document.querySelector('.app')
+      const board = document.querySelector('.board')
+      const nav = document.querySelector('.themes')
+
+      // Fotky bere z editoru, takže se ukážou jen při `npm run dev`.
+      function photo(day) {
+        const img = document.createElement('img')
+        img.src = `/api/admin/photo/${day}`
+        img.alt = ''
+        img.onerror = () => img.remove()
+        return img
+      }
+
+      function updateProgress() {
+        document.getElementById('opened').textContent = opened.size
+        document.getElementById('bar').style.width = `${(opened.size / 24) * 100}%`
+      }
+
+      function renderBoard() {
+        board.replaceChildren()
+
+        ORDER.forEach((day, i) => {
+          const state = opened.has(day) ? 'is-open' : day <= READY ? 'is-ready' : 'is-locked'
+          const w = document.createElement('button')
+          w.type = 'button'
+          w.className = `w ${state} is-entering${day === 24 ? ' w--big' : ''}`
+          w.dataset.day = day
+          w.dataset.tone = i % 5
+          w.style.setProperty('--i', i)
+          w.setAttribute('aria-label', `Okénko ${day}`)
+
+          const inside = document.createElement('span')
+          inside.className = 'w__inside'
+          if (state !== 'is-locked') inside.append(photo(day))
+
+          const door = document.createElement('span')
+          door.className = 'w__door'
+          door.innerHTML = `<span class="w__deco"></span><span class="w__num">${day}</span>`
+
+          w.append(inside, door)
+          w.insertAdjacentHTML(
+            'beforeend',
+            `<span class="w__badge">Dnes</span><span class="w__lock">${LOCK_ICON}</span><span class="w__chip">${day}</span>`,
+          )
+          board.append(w)
+        })
+
+        setTimeout(() => {
+          for (const w of board.children) w.classList.remove('is-entering')
+        }, 1100)
+      }
+
+      function setTheme(id) {
+        if (!THEMES[id]) id = 'sever'
+        const theme = THEMES[id]
+        app.className = `app s-darky t-${id}`
+        document.querySelector('.topbar').className = `topbar t-${id}`
+        document.getElementById('about-title').textContent = theme.name
+        document.getElementById('about-text').textContent = theme.text
+        for (const button of nav.children) {
+          button.setAttribute('aria-pressed', button.dataset.theme === id)
+        }
+        renderBoard()
+        history.replaceState(null, '', `#${id}`)
+      }
+
+      for (const [id, theme] of Object.entries(THEMES)) {
+        const button = document.createElement('button')
+        button.type = 'button'
+        button.dataset.theme = id
+        button.textContent = theme.name
+        button.addEventListener('click', () => setTheme(id))
+        nav.append(button)
+      }
+
+      board.addEventListener('click', (e) => {
+        const w = e.target.closest('.w')
+        if (!w) return
+        if (w.classList.contains('is-locked')) {
+          w.classList.add('is-shake')
+          w.addEventListener('animationend', () => w.classList.remove('is-shake'), { once: true })
+          return
+        }
+        const day = Number(w.dataset.day)
+        w.classList.toggle('is-ready')
+        if (w.classList.toggle('is-open')) {
+          opened.add(day)
+          // Animace otevírání jen po kliknutí, ne u okének otevřených při načtení
+          w.classList.add('is-opening')
+          clearTimeout(w.openingTimer)
+          w.openingTimer = setTimeout(() => w.classList.remove('is-opening'), 1900)
+        } else {
+          opened.delete(day)
+          w.classList.remove('is-opening')
+        }
+        updateProgress()
+      })
+
+      setTheme(location.hash.slice(1))
+      updateProgress()
+    </script>
+  </body>
+</html>

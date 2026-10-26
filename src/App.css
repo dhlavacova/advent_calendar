@@ -1,0 +1,207 @@
+.calendar {
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+  padding: 24px clamp(16px, 3vw, 48px);
+}
+
+.calendar__header {
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.calendar__header h1 {
+  font-size: clamp(2rem, 6vw, 3.5rem);
+  color: var(--gold);
+}
+
+.calendar__header p,
+.calendar__status {
+  color: var(--muted);
+  text-align: center;
+}
+
+/* Mřížka vyplní celou plochu pod nadpisem, okénka se roztáhnou do obdélníků. */
+.calendar__board {
+  flex: 1;
+  display: flex;
+}
+
+/* 23 malých okének + velké 24 (2×2) = 27 políček, tedy 9×3 nebo 3×9 bez děr. */
+.calendar__grid {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(9, 1fr);
+  grid-template-rows: repeat(3, minmax(80px, 1fr));
+  grid-auto-flow: dense;
+  gap: clamp(8px, 1.2vw, 18px);
+  perspective: 1200px;
+}
+
+/* Na mobilu jsou okénka čtvercová a kalendář se normálně posouvá dolů. */
+@media (max-width: 640px) {
+  .calendar__board {
+    display: block;
+  }
+
+  .calendar__grid {
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: none;
+    gap: 8px;
+  }
+
+  .window {
+    aspect-ratio: 1;
+  }
+}
+
+/* Okénko */
+
+.window {
+  position: relative;
+  padding: 0;
+  border: 2px solid var(--gold);
+  border-radius: 6px;
+  background: var(--inside);
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+  transform-style: preserve-3d;
+}
+
+.window--big {
+  grid-column: span 2;
+  grid-row: span 2;
+}
+
+.window:focus-visible {
+  outline: 3px solid var(--text);
+  outline-offset: 3px;
+}
+
+.window--locked {
+  cursor: not-allowed;
+  border-color: color-mix(in srgb, var(--gold) 40%, transparent);
+}
+
+.window__inside {
+  position: absolute;
+  inset: 0;
+  container-type: size;
+  overflow: hidden;
+  border-radius: 4px;
+  display: grid;
+  place-items: center;
+}
+
+.window__inside img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.window__missing {
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.window__door {
+  position: absolute;
+  inset: 0;
+  border-radius: 4px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  background: linear-gradient(135deg, var(--door), var(--door-dark));
+  transform-origin: left center;
+  transition: transform 0.8s cubic-bezier(0.3, 0.7, 0.3, 1);
+  backface-visibility: hidden;
+}
+
+.window--locked .window__door {
+  background: var(--door-locked);
+}
+
+.window--ready:hover .window__door {
+  transform: rotateY(-12deg);
+}
+
+.window--opened .window__door {
+  transform: rotateY(-105deg);
+  pointer-events: none;
+}
+
+.window__number {
+  font-family: var(--serif);
+  font-size: clamp(1.5rem, 3.5vw, 3.5rem);
+  color: var(--gold);
+}
+
+.window--big .window__number {
+  font-size: clamp(3rem, 8vw, 7rem);
+}
+
+.window--locked .window__number {
+  opacity: 0.6;
+}
+
+.window--shake {
+  animation: shake 0.4s;
+}
+
+@keyframes shake {
+  20%,
+  60% {
+    transform: translateX(-4px);
+  }
+  40%,
+  80% {
+    transform: translateX(4px);
+  }
+}
+
+/* Zvětšená fotka */
+
+.lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 16px;
+  background: rgb(0 0 0 / 0.85);
+  cursor: zoom-out;
+}
+
+.lightbox__frame {
+  position: relative;
+  container-type: inline-size;
+  overflow: hidden;
+  border-radius: 6px;
+}
+
+.lightbox__frame img {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.lightbox__caption {
+  font-family: var(--serif);
+  font-size: 1.25rem;
+  color: var(--gold);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .window__door {
+    transition: none;
+  }
+  .window--shake {
+    animation: none;
+  }
+}

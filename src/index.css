@@ -1,0 +1,59 @@
+:root {
+  --bg: #0f2a1d;
+  --bg-glow: #1d4a33;
+  --text: #f6efe2;
+  --muted: #c9bfa9;
+  --door: #a3262a;
+  --door-dark: #7b1a1e;
+  --door-locked: #5d1a1d;
+  --gold: #e8c26a;
+  --inside: #08160f;
+
+  --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
+  --serif: Georgia, 'Times New Roman', serif;
+
+  font: 16px/1.5 var(--sans);
+  color: var(--text);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100svh;
+  background:
+    radial-gradient(ellipse at top, var(--bg-glow), transparent 60%),
+    var(--bg);
+}
+
+h1 {
+  font-family: var(--serif);
+  font-weight: 400;
+  margin: 0;
+}
+
+p {
+  margin: 0;
+}
+
+/* Text přes fotku v okénku (kalendář i náhled v editoru).
+   Rodič musí mít `container-type: size`, velikost písma je v cqmin.
+   Poloha a otočení se nastavují inline přes `textPlacement`. */
+.photo-text {
+  position: absolute;
+  width: max-content;
+  max-width: 88%;
+  margin: 0;
+  text-align: center;
+  line-height: 1.15;
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+  text-shadow:
+    0 1px 2px rgb(0 0 0 / 0.8),
+    0 0 12px rgb(0 0 0 / 0.5);
+  pointer-events: none;
+}
