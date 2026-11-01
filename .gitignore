@@ -24,3 +24,7 @@ dist-ssr
 *.sw?
 photos/*
 !photos/.gitkeep
+
+# Cloudflare
+.wrangler
+.dev.vars*
