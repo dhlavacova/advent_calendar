@@ -1,4 +1,12 @@
-import { DAYS, MIME, PHOTOS_FOLDER, isUnlocked, sendJson } from '../../_lib/calendar.js'
+import { PHOTOS_FOLDER, lastUnlockedDay, sendJson } from '../../_lib/calendar.js'
+
+const MIME = {
+  '.jpg': 'image/jpeg',
+  '.jpeg': 'image/jpeg',
+  '.png': 'image/png',
+  '.webp': 'image/webp',
+  '.gif': 'image/gif',
+}
 
 async function findPhoto(env, day) {
   for (const [ext, type] of Object.entries(MIME)) {
@@ -7,13 +15,23 @@ async function findPhoto(env, day) {
   }
 }
 
-export async function onRequestGet({ params, env }) {
-  const day = /^\d{1,2}$/.test(params.day) ? Number(params.day) : 0
+export async function onRequestGet({ request, params, env }) {
+  const { day } = params
   // Zamčený den vrací stejnou odpověď jako neexistující fotka,
   // aby nešlo ani zjistit, jestli pro něj fotka existuje.
-  const photo = day >= 1 && day <= DAYS && isUnlocked(day, env) ? await findPhoto(env, day) : undefined
+  const photo =
+    /^[1-9]\d?$/.test(day) && Number(day) <= lastUnlockedDay(env) && (await findPhoto(env, day))
   if (!photo) return sendJson(404, { error: 'Not found' })
-  return new Response(photo.object.body, {
-    headers: { 'Content-Type': photo.type, 'Cache-Control': 'private, max-age=3600' },
-  })
+  const { object, type } = photo
+  const headers = {
+    'Content-Type': type,
+    'Cache-Control': 'private, max-age=3600',
+    ETag: object.httpEtag,
+  }
+  // Fotku, kterou už prohlížeč má, není potřeba posílat znovu.
+  if (request.headers.get('If-None-Match') === object.httpEtag) {
+    await object.body.cancel()
+    return new Response(null, { status: 304, headers })
+  }
+  return new Response(object.body, { headers })
 }

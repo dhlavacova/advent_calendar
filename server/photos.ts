@@ -85,7 +85,7 @@ function parseSettings(value: unknown): PhotoSettings | undefined {
 }
 
 function parseDay(pathname: string, prefix: string): number | undefined {
-  const match = pathname.match(new RegExp(`^${prefix}(\\d{1,2})$`))
+  const match = pathname.match(new RegExp(`^${prefix}([1-9]\\d?)$`))
   const day = Number(match?.[1])
   return day >= 1 && day <= DAYS ? day : undefined
 }
@@ -127,7 +127,7 @@ export function photoMiddleware(
       unlocked.push(day)
       if (settings[day]) photos[day] = settings[day]
     }
-    return sendJson(res, 200, { total: DAYS, unlocked, photos })
+    return sendJson(res, 200, { unlocked, photos })
   }
 
   if (url.pathname.startsWith('/api/photo/')) {
@@ -143,7 +143,7 @@ export function photoMiddleware(
 }
 
 // Editor fotek vidí i zamčené dny, proto se zapíná jen v `npm run dev`
-// (viz vite.config.ts), nikdy na produkčním serveru.
+// (viz vite.config.ts), na Cloudflaru neexistuje.
 export function adminMiddleware(
   req: IncomingMessage,
   res: ServerResponse,

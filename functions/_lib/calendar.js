@@ -1,16 +1,14 @@
-// Stejná pravidla jako v `server/photos.ts`, jen fotky leží v R2 (binding PHOTOS).
-export const DAYS = 24
+// Stejná pravidla jako v `server/photos.ts` pro `npm run dev`, jen fotky leží v R2 (binding PHOTOS).
+const DAYS = 24
 
 // Složka s fotkami a `settings.json` v R2.
 export const PHOTOS_FOLDER = 'POKEMON/'
 
-export const MIME = {
-  '.jpg': 'image/jpeg',
-  '.jpeg': 'image/jpeg',
-  '.png': 'image/png',
-  '.webp': 'image/webp',
-  '.gif': 'image/gif',
-}
+const PRAGUE_DATE = new Intl.DateTimeFormat('en-US', {
+  timeZone: 'Europe/Prague',
+  month: 'numeric',
+  day: 'numeric',
+})
 
 // Cloudflare běží v UTC, okénka se ale mají otevírat o půlnoci českého času.
 // Pro testování jde datum přepsat proměnnou ADVENT_DATE=2026-12-05.
@@ -19,18 +17,14 @@ function today(env) {
     const [, month, day] = env.ADVENT_DATE.split('-').map(Number)
     return { month, day }
   }
-  const parts = new Intl.DateTimeFormat('en-US', {
-    timeZone: 'Europe/Prague',
-    month: 'numeric',
-    day: 'numeric',
-  }).formatToParts(new Date())
-  const part = (type) => Number(parts.find((p) => p.type === type).value)
-  return { month: part('month'), day: part('day') }
+  const parts = PRAGUE_DATE.formatToParts(new Date())
+  return Object.fromEntries(parts.map((part) => [part.type, Number(part.value)]))
 }
 
-export function isUnlocked(day, env) {
-  const date = today(env)
-  return date.month === 12 && date.day >= day
+// Poslední odemčený den, mimo prosinec 0.
+export function lastUnlockedDay(env) {
+  const { month, day } = today(env)
+  return month === 12 ? Math.min(day, DAYS) : 0
 }
 
 export function sendJson(status, body) {
